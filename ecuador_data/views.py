@@ -28,7 +28,7 @@ def index(request):
         logger.info("Cache hit - estadísticas dashboard desde cache")
     
     # Trigger async sync only if needed (no blocking)
-    _trigger_background_sync_if_needed()
+    _trigger_background_sync_if_needed('general')
     
     return render(request, 'ecuador_data/index.html', context)
 
@@ -170,8 +170,12 @@ def _trigger_background_sync_if_needed(sync_type: str = 'all'):
                 sync_service.sync_provincias_concurrent()
             elif sync_type == 'parques':
                 sync_service.sync_parques_nacionales()
-            # elif sync_type == 'all':
-            #     sync_service.sync_all_optimized()
+            elif sync_type == 'sitios':
+                sync_service.sync_sitios_patrimoniales_enhanced()
+            elif sync_type == 'plazas':
+                sync_service.sync_plazas_optimized()
+            elif sync_type == 'all' or sync_type == 'general':
+                sync_service.sync_all_optimized()
         else:
             logger.info(f"Sync {sync_type} omitido - datos recientes")
             

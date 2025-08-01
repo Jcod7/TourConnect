@@ -141,7 +141,13 @@ class OptimizedDataSyncService:
         self.sparql_cache = caches['sparql']
     
     def should_sync(self, sync_type: str) -> bool:
-        """Determina si necesita sincronizar basado en última actualización"""
+        """Determina si necesita sincronizar basado en última actualización Y si la BD está vacía"""
+        # Verificar si la BD está vacía para este tipo de datos
+        if self._is_database_empty(sync_type):
+            logger.info(f"BD vacía para {sync_type} - forzando sincronización")
+            return True
+        
+        # Verificar tiempo desde última sincronización
         last_sync_key = f'last_sync_{sync_type}'
         last_sync = self.default_cache.get(last_sync_key)
         
@@ -152,6 +158,29 @@ class OptimizedDataSyncService:
         sync_interval = getattr(settings, 'SPARQL_SYNC_INTERVAL', 21600)  # 6 horas
         
         return time_since_sync > sync_interval
+    
+    def _is_database_empty(self, sync_type: str) -> bool:
+        """Verifica si la base de datos está vacía para el tipo específico"""
+        from .models import Provincia, ParqueNacional, SitioPatrimonial, Plaza
+        
+        try:
+            if sync_type in ['provincias', 'general']:
+                return Provincia.objects.count() == 0
+            elif sync_type == 'parques':
+                return ParqueNacional.objects.count() == 0
+            elif sync_type == 'sitios':
+                return SitioPatrimonial.objects.count() == 0
+            elif sync_type == 'plazas':
+                return Plaza.objects.count() == 0
+            else:
+                # Para 'general', verificar si cualquier tabla está vacía
+                return (Provincia.objects.count() == 0 or 
+                       ParqueNacional.objects.count() == 0 or 
+                       SitioPatrimonial.objects.count() == 0 or 
+                       Plaza.objects.count() == 0)
+        except Exception as e:
+            logger.error(f"Error verificando BD vacía para {sync_type}: {e}")
+            return True  # En caso de error, forzar sync
     
     def mark_synced(self, sync_type: str):
         """Marca el tipo de sincronización como completado"""
@@ -584,18 +613,97 @@ class OptimizedDataSyncService:
         
         return result
     
+    def sync_plazas_optimized(self) -> Dict[str, Any]:
+        """Sincronización optimizada de plazas"""
+        if not self.should_sync('plazas'):
+            return {"created": 0, "updated": 0, "errors": []}
+        
+        from .models import Plaza
+        
+        result = {"created": 0, "updated": 0, "errors": []}
+        
+        start_time = time.time()
+        wikidata_results = self.wikidata.get_plazas()
+        
+        if not wikidata_results:
+            result["errors"].append("No se pudieron obtener datos de plazas desde Wikidata")
+            return result
+        
+        for item in wikidata_results:
+            try:
+                nombre = item.get("plazaLabel", {}).get("value", "")
+                if not nombre:
+                    continue
+                
+                # Procesar coordenadas
+                latitud, longitud = self._parse_coordinates_optimized(
+                    item.get("coordenadas", {}).get("value", "")
+                )
+                
+                plaza_data = {
+                    'nombre': nombre,
+                    'ciudad': item.get("ciudadLabel", {}).get("value", ""),
+                    'provincia': item.get("provinciaLabel", {}).get("value", ""),
+                    'descripcion': item.get("descripcion", {}).get("value", ""),
+                    'latitud': latitud,
+                    'longitud': longitud,
+                    'imagen_url': item.get("imagen", {}).get("value", ""),
+                    'wikidata_id': item.get("plaza", {}).get("value", "").split('/')[-1] if item.get("plaza") else None,
+                }
+                
+                plaza, created = Plaza.objects.update_or_create(
+                    wikidata_id=plaza_data['wikidata_id'],
+                    defaults=plaza_data
+                )
+                
+                if created:
+                    result["created"] += 1
+                else:
+                    result["updated"] += 1
+                    
+            except Exception as e:
+                error_msg = f"Error procesando plaza {nombre}: {str(e)}"
+                result["errors"].append(error_msg)
+                logger.error(error_msg)
+        
+        # Marcar como sincronizado
+        self.mark_synced('plazas')
+        
+        sync_time = time.time() - start_time
+        logger.info(f"Sincronización de plazas completada en {sync_time:.2f}s: {result}")
+        
+        return result
+    
     def sync_all_optimized(self) -> Dict[str, Any]:
-        """Sincronización optimizada de todos los datos"""
+        """Sincronización optimizada de todos los datos con rate limiting"""
         start_time = time.time()
         logger.info("Iniciando sincronización optimizada completa")
         
-        # Ejecutar sincronizaciones que realmente necesiten actualización
-        result = {
-            "provincias": self.sync_provincias_concurrent(),
-            "parques": self.sync_parques_nacionales(),
-            "sitios": self.sync_sitios_patrimoniales_enhanced(),
-            # Implementar sync optimizado para plazas similar
-        }
+        # Ejecutar sincronizaciones solo si es necesario, con delays
+        result = {}
+        
+        if self.should_sync('provincias'):
+            result["provincias"] = self.sync_provincias_concurrent()
+            time.sleep(2)  # Delay para evitar rate limiting
+        else:
+            result["provincias"] = {"created": 0, "updated": 0, "errors": [], "skipped": True}
+            
+        if self.should_sync('parques'):
+            result["parques"] = self.sync_parques_nacionales()
+            time.sleep(2)  # Delay para evitar rate limiting
+        else:
+            result["parques"] = {"created": 0, "updated": 0, "errors": [], "skipped": True}
+            
+        if self.should_sync('sitios'):
+            result["sitios"] = self.sync_sitios_patrimoniales_enhanced()
+            time.sleep(2)  # Delay para evitar rate limiting
+        else:
+            result["sitios"] = {"created": 0, "updated": 0, "errors": [], "skipped": True}
+            
+        if self.should_sync('plazas'):
+            result["plazas"] = self.sync_plazas_optimized()
+        else:
+            result["plazas"] = {"created": 0, "updated": 0, "errors": [], "skipped": True}
         
         total_time = time.time() - start_time
         logger.info(f"Sincronización completa optimizada en {total_time:.2f}s")
