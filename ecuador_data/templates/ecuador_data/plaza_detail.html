@@ -1,0 +1,78 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}{{ plaza.nombre }} - Plazas del Ecuador{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                {% if plaza.imagen_url %}
+                    <img src="{{ plaza.imagen_url }}" class="card-img-top" alt="{{ plaza.nombre }}" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">
+                        <i class="fas fa-fountain text-info"></i> 
+                        {{ plaza.nombre }}
+                    </h1>
+                    
+                    {% if plaza.ciudad %}
+                        <p class="lead">{{ plaza.ciudad }}</p>
+                    {% endif %}
+                    
+                    {% if plaza.latitud and plaza.longitud %}
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <p><strong><i class="fas fa-map-marker-alt"></i> Coordenadas:</strong></p>
+                                <p>Latitud: {{ plaza.latitud|floatformat:6 }}</p>
+                                <p>Longitud: {{ plaza.longitud|floatformat:6 }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Información de la Plaza</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        <strong>Fuente de datos:</strong> Wikidata<br>
+                        <strong>ID Wikidata:</strong> {{ plaza.wikidata_id }}<br>
+                        <strong>Última actualización:</strong> {{ plaza.fecha_actualizacion|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+            
+            {% if plaza.latitud and plaza.longitud %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map"></i> Ubicación</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <a href="https://www.openstreetmap.org/?mlat={{ plaza.latitud }}&mlon={{ plaza.longitud }}&zoom=18" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-external-link-alt"></i> Ver en OpenStreetMap
+                        </a>
+                        <a href="https://www.google.com/maps?q={{ plaza.latitud }},{{ plaza.longitud }}" 
+                           target="_blank" class="btn btn-primary mt-2">
+                            <i class="fas fa-external-link-alt"></i> Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'ecuador_data:plaza_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Plazas
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

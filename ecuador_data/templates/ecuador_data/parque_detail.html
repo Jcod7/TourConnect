@@ -1,0 +1,97 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}{{ parque.nombre }} - Parques Nacionales del Ecuador{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                {% if parque.imagen_url %}
+                    <img src="{{ parque.imagen_url }}" class="card-img-top" alt="{{ parque.nombre }}" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">
+                        <i class="fas fa-tree text-success"></i> 
+                        {{ parque.nombre }}
+                    </h1>
+                    
+                    {% if parque.descripcion %}
+                        <p class="card-text">{{ parque.descripcion }}</p>
+                    {% endif %}
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            {% if parque.area %}
+                                <p><strong><i class="fas fa-ruler-combined"></i> Área:</strong> {{ parque.area|floatformat:2 }} km²</p>
+                            {% endif %}
+                            {% if parque.provincia %}
+                                <p><strong><i class="fas fa-map"></i> Provincia:</strong> {{ parque.provincia }}</p>
+                            {% endif %}
+                            {% if parque.fecha_establecimiento %}
+                                <p><strong><i class="fas fa-calendar-alt"></i> Establecido:</strong> {{ parque.fecha_establecimiento|date:"d/m/Y" }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if parque.latitud and parque.longitud %}
+                                <p><strong><i class="fas fa-map-marker-alt"></i> Coordenadas:</strong></p>
+                                <p>Latitud: {{ parque.latitud|floatformat:6 }}</p>
+                                <p>Longitud: {{ parque.longitud|floatformat:6 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if parque.website_url %}
+                        <div class="mt-3">
+                            <a href="{{ parque.website_url }}" target="_blank" class="btn btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> Sitio Web Oficial
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Información del Parque</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        <strong>Fuente de datos:</strong> Wikidata<br>
+                        <strong>ID Wikidata:</strong> {{ parque.wikidata_id }}<br>
+                        <strong>Última actualización:</strong> {{ parque.fecha_actualizacion|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+            
+            {% if parque.latitud and parque.longitud %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map"></i> Ubicación</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <a href="https://www.openstreetmap.org/?mlat={{ parque.latitud }}&mlon={{ parque.longitud }}&zoom=12" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-external-link-alt"></i> Ver en OpenStreetMap
+                        </a>
+                        <a href="https://www.google.com/maps?q={{ parque.latitud }},{{ parque.longitud }}" 
+                           target="_blank" class="btn btn-primary mt-2">
+                            <i class="fas fa-external-link-alt"></i> Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'ecuador_data:parque_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Parques Nacionales
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

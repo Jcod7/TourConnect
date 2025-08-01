@@ -1,0 +1,265 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}Patrimonio Cultural del Ecuador - TourConnect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Encabezado mejorado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-landmark fa-3x text-warning me-3"></i>
+                <div>
+                    <h1 class="mb-1">Patrimonio Cultural del Ecuador</h1>
+                    <p class="lead mb-0">{{ sitios|length }} sitios de invaluable valor histórico y cultural</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% if sitios %}
+        <div class="row" id="sitios-grid">
+            {% for sitio in sitios %}
+                <div class="col-lg-4 col-md-6 mb-4 sitio-card" data-tipo="{{ sitio.tipo }}" data-categoria="{{ sitio.categoria|default:'general' }}">
+                    <div class="card h-100 shadow-sm border-0">
+                        <!-- Imagen con overlay de categoría -->
+                        <div class="position-relative">
+                            {% if sitio.imagen_url %}
+                                <img src="{{ sitio.imagen_url }}" class="card-img-top" alt="{{ sitio.nombre }}" 
+                                     style="height: 220px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top d-flex align-items-center justify-content-center" 
+                                     style="height: 220px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    {% if sitio.tipo == 'UNESCO' %}
+                                        <i class="fas fa-globe fa-4x text-white opacity-75"></i>
+                                    {% elif sitio.tipo == 'ARQUEOLOGICO' %}
+                                        <i class="fas fa-search fa-4x text-white opacity-75"></i>
+                                    {% elif sitio.tipo == 'RELIGIOSO' %}
+                                        <i class="fas fa-church fa-4x text-white opacity-75"></i>
+                                    {% elif sitio.tipo == 'MUSEO' %}
+                                        <i class="fas fa-university fa-4x text-white opacity-75"></i>
+                                    {% else %}
+                                        <i class="fas fa-landmark fa-4x text-white opacity-75"></i>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Badge de categoría -->
+                            <div class="position-absolute top-0 end-0 m-2">
+                                {% if sitio.tipo == 'UNESCO' %}
+                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                        <i class="fas fa-globe me-1"></i>UNESCO
+                                    </span>
+                                {% elif sitio.tipo == 'ARQUEOLOGICO' %}
+                                    <span class="badge bg-info px-3 py-2">
+                                        <i class="fas fa-search me-1"></i>Arqueológico
+                                    </span>
+                                {% elif sitio.tipo == 'HISTORICO' %}
+                                    <span class="badge bg-secondary px-3 py-2">
+                                        <i class="fas fa-building me-1"></i>Histórico
+                                    </span>
+                                {% elif sitio.tipo == 'RELIGIOSO' %}
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-church me-1"></i>Religioso
+                                    </span>
+                                {% elif sitio.tipo == 'MUSEO' %}
+                                    <span class="badge bg-dark px-3 py-2">
+                                        <i class="fas fa-university me-1"></i>Museo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-primary px-3 py-2">
+                                        <i class="fas fa-landmark me-1"></i>{{ sitio.get_tipo_display }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">{{ sitio.nombre }}</h5>
+                            
+                            <!-- Información de ubicación -->
+                            {% if sitio.provincia or sitio.ciudad %}
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {% if sitio.ciudad %}{{ sitio.ciudad }}{% if sitio.provincia %}, {% endif %}{% endif %}
+                                    {% if sitio.provincia %}{{ sitio.provincia }}{% endif %}
+                                </p>
+                            {% endif %}
+
+                            <!-- Información específica enriquecida -->
+                            <div class="mb-3">
+                                {% if sitio.es_unesco %}
+                                    {% if sitio.numero_unesco %}
+                                        <small class="text-warning">
+                                            <i class="fas fa-certificate me-1"></i>
+                                            UNESCO N° {{ sitio.numero_unesco }}
+                                        </small><br>
+                                    {% endif %}
+                                    {% if sitio.fecha_inscripcion_unesco %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Inscrito: {{ sitio.fecha_inscripcion_unesco|date:"Y" }}
+                                        </small><br>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if sitio.es_arqueologico %}
+                                    {% if sitio.get_detalles_por_tipo.cultura %}
+                                        <small class="text-info">
+                                            <i class="fas fa-users me-1"></i>
+                                            Cultura: {{ sitio.get_detalles_por_tipo.cultura }}
+                                        </small><br>
+                                    {% endif %}
+                                    {% if sitio.get_detalles_por_tipo.periodo %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Período: {{ sitio.get_detalles_por_tipo.periodo }}
+                                        </small><br>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if sitio.tipo == 'RELIGIOSO' %}
+                                    {% if sitio.get_detalles_por_tipo.diocesis %}
+                                        <small class="text-success">
+                                            <i class="fas fa-cross me-1"></i>
+                                            {{ sitio.get_detalles_por_tipo.diocesis }}
+                                        </small><br>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if sitio.arquitecto %}
+                                    <small class="text-primary">
+                                        <i class="fas fa-user-tie me-1"></i>
+                                        Arquitecto: {{ sitio.arquitecto }}
+                                    </small><br>
+                                {% endif %}
+
+                            </div>
+
+                            <!-- Descripción -->
+                            {% if sitio.descripcion %}
+                                <p class="card-text text-muted">{{ sitio.descripcion|truncatewords:25 }}</p>
+                            {% endif %}
+
+                        </div>
+
+                        <!-- Footer con acciones -->
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="row g-2">
+                                <div class="col">
+                                    <a href="{% url 'ecuador_data:sitio_detail' sitio.pk %}" 
+                                       class="btn btn-warning btn-sm w-100">
+                                        <i class="fas fa-eye me-1"></i>Ver Detalles
+                                    </a>
+                                </div>
+                                
+                                {% if sitio.latitud and sitio.longitud %}
+                                    <div class="col">
+                                        <a href="https://www.openstreetmap.org/?mlat={{ sitio.latitud }}&mlon={{ sitio.longitud }}&zoom=15" 
+                                           target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="fas fa-map-marker-alt me-1"></i>Mapa
+                                        </a>
+                                    </div>
+                                {% endif %}
+
+                                {% if sitio.website %}
+                                    <div class="col">
+                                        <a href="{{ sitio.website }}" target="_blank" 
+                                           class="btn btn-outline-success btn-sm w-100">
+                                            <i class="fas fa-external-link-alt me-1"></i>Web
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Paginación de sitios patrimoniales">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center border-0 shadow-sm">
+                    <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
+                    <h4>No hay sitios patrimoniales disponibles</h4>
+                    <p class="mb-0">Los datos se están sincronizando desde fuentes LOD. Por favor, inténtalo nuevamente en unos momentos.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+
+<style>
+.sitio-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sitio-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+
+.badge {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.card-footer .btn {
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

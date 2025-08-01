@@ -1,0 +1,329 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}{{ provincia.nombre }} - Provincias del Ecuador{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+      crossorigin=""/>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                {% if provincia.imagen_url %}
+                    <img src="{{ provincia.imagen_url }}" class="card-img-top" alt="{{ provincia.nombre }}" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">
+                        <i class="fas fa-map text-primary"></i> 
+                        {{ provincia.nombre }}
+                    </h1>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            {% if provincia.capital %}
+                                <p><strong><i class="fas fa-city"></i> Capital:</strong> {{ provincia.capital }}</p>
+                            {% endif %}
+                            {% if provincia.poblacion %}
+                                <p><strong><i class="fas fa-users"></i> Población:</strong> {{ provincia.poblacion|floatformat:0 }} habitantes</p>
+                            {% endif %}
+                            {% if provincia.area %}
+                                <p><strong><i class="fas fa-ruler-combined"></i> Área:</strong> {{ provincia.area|floatformat:2 }} km²</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if provincia.latitud and provincia.longitud %}
+                                <p><strong><i class="fas fa-map-marker-alt"></i> Coordenadas:</strong></p>
+                                <p>Latitud: {{ provincia.latitud|floatformat:6 }}</p>
+                                <p>Longitud: {{ provincia.longitud|floatformat:6 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if provincia.wikipedia_url %}
+                        <div class="mt-3">
+                            <a href="{{ provincia.wikipedia_url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fab fa-wikipedia-w"></i> Ver en Wikipedia
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Información Adicional</h5>
+                </div>
+                <div class="card-body">
+                    {% if provincia.bandera_url %}
+                        <div class="mb-3 text-center">
+                            {% if provincia.bandera_url|lower|slice:'-4:' == '.svg' %}
+                                <object data="{{ provincia.bandera_url }}" type="image/svg+xml" style="max-width: 100%; max-height: 130px; width: auto; height: auto;"></object>
+                            {% else %}
+                                <img src="{{ provincia.bandera_url }}" alt="Bandera de {{ provincia.nombre }}" style="max-width: 100%; max-height: 130px; width: auto; height: auto; object-fit: contain;">
+                            {% endif %}
+                            <p class="small text-muted">Bandera de {{ provincia.nombre }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if provincia.escudo_url %}
+                        <div class="mb-3 text-center">
+                            <img src="{{ provincia.escudo_url }}" alt="Escudo de {{ provincia.nombre }}" class="img-fluid" style="max-height: 100px;">
+                            <p class="small text-muted">Escudo de {{ provincia.nombre }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <p class="small text-muted">
+                        <strong>Fuente de datos:</strong> Wikidata<br>
+                        <strong>ID Wikidata:</strong> {{ provincia.wikidata_id }}<br>
+                        <strong>Última actualización:</strong> {{ provincia.fecha_actualizacion|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+            
+            {% if provincia.latitud and provincia.longitud %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map"></i> Ubicación</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <a href="https://www.openstreetmap.org/?mlat={{ provincia.latitud }}&mlon={{ provincia.longitud }}&zoom=8" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-external-link-alt"></i> Ver en OpenStreetMap
+                        </a>
+                        <a href="https://www.google.com/maps?q={{ provincia.latitud }},{{ provincia.longitud }}" 
+                           target="_blank" class="btn btn-primary mt-2">
+                            <i class="fas fa-external-link-alt"></i> Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Mapa de la Provincia -->
+    {% if provincia.latitud and provincia.longitud %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0" style="border-radius: 0.75rem;">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-map me-2"></i>
+                        Ubicación de {{ provincia.nombre }}
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    <div id="provincia-map" style="height: 400px; border-radius: 0 0 0.75rem 0.75rem;"></div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Coordenadas: {{ provincia.latitud|floatformat:4 }}, {{ provincia.longitud|floatformat:4 }}
+                                {% if provincia.capital %} | Capital: {{ provincia.capital }}{% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="https://www.google.com/maps?q={{ provincia.latitud }},{{ provincia.longitud }}" 
+                               target="_blank" class="btn btn-outline-primary btn-sm me-1">
+                                <i class="fas fa-external-link-alt me-1"></i>Google Maps
+                            </a>
+                            <a href="https://www.openstreetmap.org/?mlat={{ provincia.latitud }}&mlon={{ provincia.longitud }}&zoom=9" 
+                               target="_blank" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-map me-1"></i>OpenStreetMap
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sección de Cantones separada -->
+    {% if provincia.cantones %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-4" style="border-radius: 0.75rem;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Cantones de {{ provincia.nombre }}
+                        <span class="badge bg-light text-primary ms-2">{{ provincia.cantones|length }}</span>
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        {% for canton in provincia.cantones|dictsort:"nombre" %}
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <div class="card canton-card h-100 shadow-sm border-0" style="border-radius: 0.75rem; transition: all 0.3s ease;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                                    <i class="fas fa-map-marker-alt text-info fa-lg"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold">
+                                                    {% if canton.url %}
+                                                        <a href="{{ canton.url }}" target="_blank" class="text-decoration-none text-dark">
+                                                            {{ canton.nombre }}
+                                                            <i class="fas fa-external-link-alt fa-xs ms-1 text-muted"></i>
+                                                        </a>
+                                                    {% else %}
+                                                        {{ canton.nombre }}
+                                                    {% endif %}
+                                                </h6>
+                                                {% if canton.cabecera %}
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-building me-1"></i>
+                                                        {{ canton.cabecera }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="canton-info">
+                                            {% if canton.poblacion %}
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block mb-1">
+                                                        <i class="fas fa-users me-1"></i>
+                                                        Población
+                                                    </small>
+                                                    <span class="badge bg-light text-dark border">{{ canton.poblacion }}</span>
+                                                </div>
+                                            {% endif %}
+                                            {% if canton.descripcion %}
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block mb-1">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Descripción
+                                                    </small>
+                                                    <p class="small mb-0 text-muted" style="font-size: 0.8rem; line-height: 1.3;">
+                                                        {{ canton.descripcion|truncatechars:100 }}
+                                                    </p>
+                                                </div>
+                                            {% endif %}
+                                            {% if canton.latitud and canton.longitud %}
+                                                <div class="mb-0">
+                                                    <small class="text-muted d-block mb-1">
+                                                        <i class="fas fa-map-pin me-1"></i>
+                                                        Coordenadas
+                                                    </small>
+                                                    <div class="d-flex gap-3 mb-2">
+                                                        <small class="text-muted">Lat: {{ canton.latitud|floatformat:3 }}</small>
+                                                        <small class="text-muted">Lon: {{ canton.longitud|floatformat:3 }}</small>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <div id="map-{{ forloop.counter }}" style="height: 150px; border-radius: 8px; border: 1px solid #ddd;"></div>
+                                                        <div class="text-center mt-1">
+                                                            <a href="https://www.google.com/maps?q={{ canton.latitud }},{{ canton.longitud }}" 
+                                                               target="_blank" class="btn btn-outline-primary btn-sm me-1">
+                                                                <i class="fas fa-external-link-alt me-1"></i>Google Maps
+                                                            </a>
+                                                            <a href="https://www.openstreetmap.org/?mlat={{ canton.latitud }}&mlon={{ canton.longitud }}&zoom=12" 
+                                                               target="_blank" class="btn btn-outline-success btn-sm">
+                                                                <i class="fas fa-map me-1"></i>OpenStreetMap
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'ecuador_data:provincia_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Provincias
+            </a>
+        </div>
+    </div>
+</div>
+<style>
+.canton-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+.canton-info .badge {
+    font-size: 0.75rem;
+}
+@media (max-width: 768px) {
+    .col-xl-4 {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+        crossorigin=""></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar mapa de la provincia
+    {% if provincia.latitud and provincia.longitud %}
+        var provinciaMap = L.map('provincia-map').setView([{{ provincia.latitud }}, {{ provincia.longitud }}], 9);
+        
+        // Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(provinciaMap);
+        
+        // Marcador principal de la provincia
+        L.marker([{{ provincia.latitud }}, {{ provincia.longitud }}])
+            .addTo(provinciaMap)
+            .bindPopup('<strong>{{ provincia.nombre }}</strong>{% if provincia.capital %}<br>Capital: {{ provincia.capital }}{% endif %}{% if provincia.poblacion %}<br>Población: {{ provincia.poblacion|floatformat:0 }} habitantes{% endif %}')
+            .openPopup();
+        
+        // Agregar marcadores de los cantones si existen
+        {% if provincia.cantones %}
+            {% for canton in provincia.cantones|dictsort:"nombre" %}
+                {% if canton.latitud and canton.longitud %}
+                    L.marker([{{ canton.latitud }}, {{ canton.longitud }}], {
+                        opacity: 0.7
+                    })
+                    .addTo(provinciaMap)
+                    .bindPopup('<strong>{{ canton.nombre }}</strong>{% if canton.cabecera %}<br>Cabecera: {{ canton.cabecera }}{% endif %}');
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+    
+    // Inicializar mapas individuales de cantones
+    {% if provincia.cantones %}
+        {% for canton in provincia.cantones|dictsort:"nombre" %}
+            {% if canton.latitud and canton.longitud %}
+                // Inicializar mapa para {{ canton.nombre }}
+                var map{{ forloop.counter }} = L.map('map-{{ forloop.counter }}').setView([{{ canton.latitud }}, {{ canton.longitud }}], 12);
+                
+                // Agregar capa de OpenStreetMap
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map{{ forloop.counter }});
+                
+                // Agregar marcador
+                L.marker([{{ canton.latitud }}, {{ canton.longitud }}])
+                    .addTo(map{{ forloop.counter }})
+                    .bindPopup('<strong>{{ canton.nombre }}</strong>{% if canton.cabecera %}<br>Cabecera: {{ canton.cabecera }}{% endif %}')
+                    .openPopup();
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

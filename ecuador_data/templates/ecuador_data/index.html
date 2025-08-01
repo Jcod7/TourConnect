@@ -1,0 +1,186 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}TourConnect - Turismo y Patrimonio{% endblock %}
+
+{% block content %}
+<!-- Sección Hero -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-mountain"></i> 
+                    TourConnect
+                </h1>
+                <p class="lead mb-4">
+                    Explora la riqueza turística y patrimonial del Ecuador con información
+                    detallada de provincias, parques nacionales y sitios de interés.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'ecuador_data:provincia_list' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-map"></i> Explorar Provincias
+                    </a>
+                    <a href="{% url 'ecuador_data:parque_list' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-tree"></i> Ver Parques
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <i class="fas fa-globe-americas" style="font-size: 12rem; opacity: 0.7;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-map fa-3x mb-3"></i>
+                    <h3>{{ total_provincias }}</h3>
+                    <p class="mb-0">Provincias</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-tree fa-3x mb-3"></i>
+                    <h3>{{ total_parques }}</h3>
+                    <p class="mb-0">Parques Nacionales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-landmark fa-3x mb-3"></i>
+                    <h3>{{ total_sitios }}</h3>
+                    <p class="mb-0">Sitios Patrimoniales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-th-large fa-3x mb-3"></i>
+                    <h3>{{ total_plazas }}</h3>
+                    <p class="mb-0">Plazas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secciones principales -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map text-primary"></i> Provincias del Ecuador
+                    </h5>
+                    <p class="card-text">
+                        Descubre las 24 provincias del Ecuador con información detallada sobre
+                        población, área, capitales y coordenadas geográficas.
+                    </p>
+                    <a href="{% url 'ecuador_data:provincia_list' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Ver Provincias
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tree text-success"></i> Parques Nacionales
+                    </h5>
+                    <p class="card-text">
+                        Explora los parques nacionales del Ecuador, sus áreas protegidas,
+                        ubicación y fechas de establecimiento.
+                    </p>
+                    <a href="{% url 'ecuador_data:parque_list' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right"></i> Ver Parques
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-landmark text-warning"></i> Patrimonio Cultural
+                    </h5>
+                    <p class="card-text">
+                        Conoce los sitios patrimoniales del Ecuador, incluyendo Patrimonio
+                        Mundial UNESCO y sitios arqueológicos importantes.
+                    </p>
+                    <a href="{% url 'ecuador_data:sitio_list' %}" class="btn btn-warning">
+                        <i class="fas fa-arrow-right"></i> Ver Sitios
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-fountain text-info"></i> Plazas Principales
+                    </h5>
+                    <p class="card-text">
+                        Recorre las plazas más importantes de las ciudades ecuatorianas,
+                        centros de la vida social y cultural.
+                    </p>
+                    <a href="{% url 'ecuador_data:plaza_list' %}" class="btn btn-info">
+                        <i class="fas fa-arrow-right"></i> Ver Plazas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acerca del Proyecto -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="fas fa-info-circle text-primary"></i> 
+                        Acerca de este Proyecto
+                    </h4>
+                    <p class="card-text">
+                        Este proyecto está desarrollado con Django para mostrar información
+                        turística y patrimonial del Ecuador de manera organizada y fácil de explorar.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-check-circle text-success"></i> Funcionalidades:</h6>
+                            <ul>
+                                <li>Navegación intuitiva por categorías</li>
+                                <li>Información geográfica integrada</li>
+                                <li>API REST para acceso programático</li>
+                                <li>Diseño responsivo</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-info-circle text-info"></i> Contenido:</h6>
+                            <ul>
+                                <li><strong>Provincias:</strong> Las 24 provincias del Ecuador</li>
+                                <li><strong>Parques:</strong> Áreas naturales protegidas</li>
+                                <li><strong>Patrimonio:</strong> Sitios de valor cultural</li>
+                                <li><strong>Plazas:</strong> Espacios públicos importantes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

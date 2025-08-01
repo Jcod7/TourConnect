@@ -1,0 +1,113 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}Provincias del Ecuador - TourConnect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>
+                <i class="fas fa-map text-primary"></i> 
+                Provincias del Ecuador
+            </h1>
+            <p class="lead">
+                Descubre las 24 provincias del Ecuador
+            </p>
+        </div>
+    </div>
+
+    {% if provincias %}
+        <div class="row">
+            {% for provincia in provincias %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if provincia.bandera_url and provincia.bandera_url|length > 0 %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                {% if provincia.bandera_url|lower|slice:'-4:' == '.svg' %}
+                                    <object data="{{ provincia.bandera_url }}" type="image/svg+xml" style="max-width: 100%; max-height: 130px; width: auto; height: auto;"></object>
+                                {% else %}
+                                    <img src="{{ provincia.bandera_url }}" alt="Bandera de {{ provincia.nombre }}" style="max-width: 100%; max-height: 130px; width: auto; height: auto; object-fit: contain;">
+                                {% endif %}
+                            </div>
+                        {% elif provincia.imagen_url and provincia.imagen_url|length > 0 %}
+                            <img src="{{ provincia.imagen_url }}" class="card-img-top" alt="Imagen de {{ provincia.nombre }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                <i class="fas fa-map fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ provincia.nombre }}</h5>
+                            <div class="card-text">
+                                <p><strong>Capital:</strong> {{ provincia.capital }}</p>
+                                {% if provincia.poblacion %}
+                                    <p><strong>Población:</strong> {{ provincia.poblacion|floatformat:0 }}</p>
+                                {% endif %}
+                                {% if provincia.area %}
+                                    <p><strong>Área:</strong> {{ provincia.area|floatformat:2 }} km²</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'ecuador_data:provincia_detail' provincia.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                            {% if provincia.latitud and provincia.longitud %}
+                                <a href="https://www.openstreetmap.org/?mlat={{ provincia.latitud }}&mlon={{ provincia.longitud }}&zoom=10" 
+                                   target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-map-marker-alt"></i> Mapa
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Paginación de provincias">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">&laquo; Primera</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>No hay provincias disponibles</h4>
+                    <p>No se han encontrado datos de provincias en la base de datos.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

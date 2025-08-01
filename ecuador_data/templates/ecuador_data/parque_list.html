@@ -1,0 +1,72 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}Parques Nacionales del Ecuador - TourConnect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>
+                <i class="fas fa-tree text-success"></i> 
+                Parques Nacionales del Ecuador
+            </h1>
+            <p class="lead">
+                Descubre las áreas protegidas del Ecuador
+            </p>
+        </div>
+    </div>
+
+    {% if parques %}
+        <div class="row">
+            {% for parque in parques %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if parque.imagen_url %}
+                            <img src="{{ parque.imagen_url }}" class="card-img-top" alt="{{ parque.nombre }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                <i class="fas fa-tree fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ parque.nombre }}</h5>
+                            <div class="card-text">
+                                {% if parque.area %}
+                                    <p><strong>Área:</strong> {{ parque.area|floatformat:2 }} km²</p>
+                                {% endif %}
+                                {% if parque.provincia %}
+                                    <p><strong>Provincia:</strong> {{ parque.provincia }}</p>
+                                {% endif %}
+                                {% if parque.fecha_establecimiento %}
+                                    <p><strong>Establecido:</strong> {{ parque.fecha_establecimiento|date:"Y" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'ecuador_data:parque_detail' parque.pk %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                            {% if parque.latitud and parque.longitud %}
+                                <a href="https://www.openstreetmap.org/?mlat={{ parque.latitud }}&mlon={{ parque.longitud }}&zoom=12" 
+                                   target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-map-marker-alt"></i> Mapa
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>No hay parques nacionales disponibles</h4>
+                    <p>No se han encontrado datos de parques nacionales en la base de datos.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

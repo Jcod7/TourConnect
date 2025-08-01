@@ -1,0 +1,318 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}Resultados de búsqueda{% if query %} - "{{ query }}"{% endif %} - TourConnect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Encabezado de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-search fa-3x text-primary me-3"></i>
+                <div>
+                    <h1 class="mb-1">Resultados de búsqueda</h1>
+                    {% if query %}
+                        <p class="lead mb-0">
+                            Resultados para "<strong>{{ query }}</strong>" 
+                            <span class="badge bg-primary ms-2">{{ total_results }} encontrados</span>
+                        </p>
+                    {% else %}
+                        <p class="lead mb-0 text-muted">Ingresa un término de búsqueda para comenzar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if query and total_results == 0 %}
+        <!-- Sin resultados -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center border-0 shadow-sm">
+                    <i class="fas fa-search fa-3x mb-3 text-info opacity-75"></i>
+                    <h4>No se encontraron resultados</h4>
+                    <p class="mb-3">No encontramos destinos que coincidan con "<strong>{{ query }}</strong>"</p>
+                    <div class="mt-3">
+                        <p><strong>Sugerencias:</strong></p>
+                        <ul class="list-unstyled">
+                            <li>• Verifica la ortografía</li>
+                            <li>• Usa términos más generales</li>
+                            <li>• Intenta con nombres de ciudades o provincias</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif query and total_results > 0 %}
+        <!-- Resultados encontrados -->
+        
+        <!-- Sitios Patrimoniales -->
+        {% if sitios %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="h4 mb-3">
+                        <i class="fas fa-landmark text-warning me-2"></i>
+                        Sitios Patrimoniales 
+                        <span class="badge bg-warning text-dark">{{ sitios|length }}</span>
+                    </h3>
+                    <div class="row">
+                        {% for sitio in sitios %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-warning border-opacity-25">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'ecuador_data:sitio_detail' sitio.pk %}" class="text-decoration-none">
+                                                {{ sitio.nombre }}
+                                            </a>
+                                        </h6>
+                                        {% if sitio.provincia or sitio.ciudad %}
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                {% if sitio.ciudad %}{{ sitio.ciudad }}{% if sitio.provincia %}, {% endif %}{% endif %}
+                                                {% if sitio.provincia %}{{ sitio.provincia }}{% endif %}
+                                            </p>
+                                        {% endif %}
+                                        {% if sitio.descripcion %}
+                                            <p class="card-text small">{{ sitio.descripcion|truncatewords:15 }}</p>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary small">
+                                                {{ sitio.get_tipo_display|default:"Patrimonial" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Parques Nacionales -->
+        {% if parques %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="h4 mb-3">
+                        <i class="fas fa-tree text-success me-2"></i>
+                        Parques Nacionales 
+                        <span class="badge bg-success">{{ parques|length }}</span>
+                    </h3>
+                    <div class="row">
+                        {% for parque in parques %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-success border-opacity-25">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'ecuador_data:parque_detail' parque.pk %}" class="text-decoration-none">
+                                                {{ parque.nombre }}
+                                            </a>
+                                        </h6>
+                                        {% if parque.provincia %}
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ parque.provincia }}
+                                            </p>
+                                        {% endif %}
+                                        {% if parque.descripcion %}
+                                            <p class="card-text small">{{ parque.descripcion|truncatewords:15 }}</p>
+                                        {% endif %}
+                                        <div class="row text-center mt-2">
+                                            {% if parque.area %}
+                                                <div class="col-6">
+                                                    <small class="text-success">
+                                                        <i class="fas fa-expand-arrows-alt"></i><br>
+                                                        <strong>{{ parque.area|floatformat:0 }}</strong><br>
+                                                        <span class="text-muted">hectáreas</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                            {% if parque.fecha_establecimiento %}
+                                                <div class="col-6">
+                                                    <small class="text-info">
+                                                        <i class="fas fa-calendar"></i><br>
+                                                        <strong>{{ parque.fecha_establecimiento|date:"Y" }}</strong><br>
+                                                        <span class="text-muted">establecido</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Plazas -->
+        {% if plazas %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="h4 mb-3">
+                        <i class="fas fa-fountain text-info me-2"></i>
+                        Plazas Históricas 
+                        <span class="badge bg-info">{{ plazas|length }}</span>
+                    </h3>
+                    <div class="row">
+                        {% for plaza in plazas %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-info border-opacity-25">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'ecuador_data:plaza_detail' plaza.pk %}" class="text-decoration-none">
+                                                {{ plaza.nombre }}
+                                            </a>
+                                        </h6>
+                                        {% if plaza.ciudad %}
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ plaza.ciudad }}
+                                                {% if plaza.ciudad|lower == "quito" or plaza.ciudad|lower == "cuenca" %}
+                                                    <span class="badge bg-warning text-dark ms-1 small">UNESCO</span>
+                                                {% endif %}
+                                            </p>
+                                        {% endif %}
+                                        {% if plaza.descripcion %}
+                                            <p class="card-text small">{{ plaza.descripcion|truncatewords:15 }}</p>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-light text-dark small">Plaza Histórica</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Provincias -->
+        {% if provincias %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="h4 mb-3">
+                        <i class="fas fa-map text-primary me-2"></i>
+                        Provincias 
+                        <span class="badge bg-primary">{{ provincias|length }}</span>
+                    </h3>
+                    <div class="row">
+                        {% for provincia in provincias %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-primary border-opacity-25">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'ecuador_data:provincia_detail' provincia.pk %}" class="text-decoration-none">
+                                                {{ provincia.nombre }}
+                                            </a>
+                                        </h6>
+                                        {% if provincia.capital %}
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="fas fa-star me-1"></i>Capital: {{ provincia.capital }}
+                                            </p>
+                                        {% endif %}
+                                        <div class="row text-center mt-2">
+                                            {% if provincia.poblacion %}
+                                                <div class="col-6">
+                                                    <small class="text-primary">
+                                                        <i class="fas fa-users"></i><br>
+                                                        <strong>{{ provincia.poblacion|floatformat:0 }}</strong><br>
+                                                        <span class="text-muted">habitantes</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                            {% if provincia.area %}
+                                                <div class="col-6">
+                                                    <small class="text-success">
+                                                        <i class="fas fa-expand-arrows-alt"></i><br>
+                                                        <strong>{{ provincia.area|floatformat:0 }}</strong><br>
+                                                        <span class="text-muted">km²</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Enlaces de navegación -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-center">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'ecuador_data:sitio_list' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-landmark me-1"></i>Ver todos los sitios
+                        </a>
+                        <a href="{% url 'ecuador_data:parque_list' %}" class="btn btn-outline-success">
+                            <i class="fas fa-tree me-1"></i>Ver todos los parques
+                        </a>
+                        <a href="{% url 'ecuador_data:plaza_list' %}" class="btn btn-outline-info">
+                            <i class="fas fa-fountain me-1"></i>Ver todas las plazas
+                        </a>
+                        <a href="{% url 'ecuador_data:provincia_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-map me-1"></i>Ver todas las provincias
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Estado inicial sin búsqueda -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">Descubre los destinos de Ecuador</h4>
+                    <p class="text-muted mb-4">Usa el campo de búsqueda en la parte superior para encontrar sitios patrimoniales, parques nacionales, plazas históricas y provincias.</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-landmark fa-2x text-warning mb-2"></i>
+                                    <h6>Sitios Patrimoniales</h6>
+                                    <small class="text-muted">UNESCO, arqueológicos, históricos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tree fa-2x text-success mb-2"></i>
+                                    <h6>Parques Nacionales</h6>
+                                    <small class="text-muted">Áreas naturales protegidas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-fountain fa-2x text-info mb-2"></i>
+                                    <h6>Plazas Históricas</h6>
+                                    <small class="text-muted">Espacios públicos emblemáticos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-map fa-2x text-primary mb-2"></i>
+                                    <h6>Provincias</h6>
+                                    <small class="text-muted">24 divisiones administrativas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

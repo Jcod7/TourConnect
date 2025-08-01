@@ -1,0 +1,340 @@
+{% extends 'ecuador_data/base.html' %}
+
+{% block title %}Plazas Históricas del Ecuador - TourConnect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Encabezado enriquecido -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <div class="me-4">
+                    <div class="rounded-circle bg-info bg-gradient d-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-fountain fa-3x text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="mb-2">Plazas Históricas del Ecuador</h1>
+                    <p class="lead text-muted mb-1">{{ plazas|length }} espacios públicos emblemáticos del país</p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Centros neurálgicos de la vida social, cultural y política ecuatoriana
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información contextual -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="card-title text-info mb-1">
+                                <i class="fas fa-landmark me-2"></i>Patrimonio Urbano Ecuatoriano
+                            </h6>
+                            <p class="card-text mb-0 small">
+                                Las plazas principales de Ecuador representan siglos de historia urbana, desde la época colonial 
+                                hasta la actualidad. Estos espacios han sido testigos de eventos históricos, celebraciones 
+                                populares y la evolución social del país.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex justify-content-end align-items-center">
+                                <div class="text-center">
+                                    <div class="h4 mb-0 text-info">{{ plazas|length }}</div>
+                                    <small class="text-muted">Plazas Registradas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if plazas %}
+        <!-- Grid de plazas mejorado -->
+        <div class="row">
+            {% for plaza in plazas %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 plaza-card">
+                        <!-- Header con imagen/icono mejorado -->
+                        <div class="position-relative">
+                            {% if plaza.imagen_url %}
+                                <img src="{{ plaza.imagen_url }}" class="card-img-top" alt="{{ plaza.nombre }}" 
+                                     style="height: 240px; object-fit: cover;">
+                                <div class="position-absolute bottom-0 start-0 end-0" 
+                                     style="background: linear-gradient(transparent, rgba(0,0,0,0.7)); height: 60px;"></div>
+                                <div class="position-absolute bottom-0 start-0 p-3">
+                                    <span class="badge bg-info bg-gradient px-3 py-2">
+                                        <i class="fas fa-fountain me-1"></i>Plaza Histórica
+                                    </span>
+                                </div>
+                            {% else %}
+                                <div class="card-img-top d-flex align-items-center justify-content-center position-relative" 
+                                     style="height: 240px; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                                    <!-- Patrón decorativo -->
+                                    <div class="position-absolute w-100 h-100 opacity-25">
+                                        <svg width="100%" height="100%" viewBox="0 0 100 100">
+                                            <defs>
+                                                <pattern id="plaza-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                                    <circle cx="10" cy="10" r="1" fill="white" opacity="0.3"/>
+                                                </pattern>
+                                            </defs>
+                                            <rect width="100%" height="100%" fill="url(#plaza-pattern)"/>
+                                        </svg>
+                                    </div>
+                                    
+                                    <div class="text-center text-white">
+                                        <i class="fas fa-fountain fa-4x mb-3 opacity-75"></i>
+                                        <h6 class="text-white mb-0 opacity-90">Plaza Ecuatoriana</h6>
+                                    </div>
+                                    
+                                    <div class="position-absolute bottom-0 start-0 p-3">
+                                        <span class="badge bg-white text-info px-3 py-2">
+                                            <i class="fas fa-fountain me-1"></i>Plaza Histórica
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Título y ubicación -->
+                            <h5 class="card-title mb-2 text-dark">{{ plaza.nombre }}</h5>
+                            
+                            {% if plaza.ciudad %}
+                                <div class="d-flex align-items-center mb-3 text-muted">
+                                    <i class="fas fa-map-marker-alt me-2 text-info"></i>
+                                    <span class="fw-medium">{{ plaza.ciudad }}</span>
+                                    {% if plaza.ciudad|lower != "quito" and plaza.ciudad|lower != "guayaquil" %}
+                                        <span class="badge bg-light text-dark ms-2 small">Ciudad</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark ms-2 small">Capital</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Información contextual enriquecida -->
+                            <div class="mb-3">
+                                {% if plaza.coordenadas %}
+                                    <small class="text-success d-block mb-1">
+                                        <i class="fas fa-crosshairs me-1"></i>
+                                        Coordenadas: {{ plaza.latitud|floatformat:4 }}, {{ plaza.longitud|floatformat:4 }}
+                                    </small>
+                                {% endif %}
+                                
+                                <!-- Información inferida según el nombre -->
+                                {% if "independencia" in plaza.nombre|lower %}
+                                    <small class="text-warning d-block mb-1">
+                                        <i class="fas fa-star me-1"></i>
+                                        Plaza de la Independencia - Centro histórico
+                                    </small>
+                                {% elif "armas" in plaza.nombre|lower %}
+                                    <small class="text-primary d-block mb-1">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        Plaza de Armas - Núcleo colonial
+                                    </small>
+                                {% elif "central" in plaza.nombre|lower or "main" in plaza.nombre|lower %}
+                                    <small class="text-info d-block mb-1">
+                                        <i class="fas fa-building me-1"></i>
+                                        Plaza Central - Corazón urbano
+                                    </small>
+                                {% else %}
+                                    <small class="text-secondary d-block mb-1">
+                                        <i class="fas fa-fountain me-1"></i>
+                                        Espacio público tradicional
+                                    </small>
+                                {% endif %}
+
+                                <!-- Importancia histórica inferida -->
+                                {% if plaza.ciudad|lower == "quito" %}
+                                    <small class="text-danger d-block">
+                                        <i class="fas fa-crown me-1"></i>
+                                        Patrimonio Mundial UNESCO - Centro Histórico de Quito
+                                    </small>
+                                {% elif plaza.ciudad|lower == "cuenca" %}
+                                    <small class="text-warning d-block">
+                                        <i class="fas fa-university me-1"></i>
+                                        Centro Histórico de Cuenca - Patrimonio UNESCO
+                                    </small>
+                                {% elif plaza.ciudad %}
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-history me-1"></i>
+                                        Centro histórico de {{ plaza.ciudad }}
+                                    </small>
+                                {% endif %}
+                            </div>
+
+                            <!-- Descripción contextual -->
+                            <p class="card-text text-muted small">
+                                {% if "independencia" in plaza.nombre|lower %}
+                                    Espacio ceremonial donde se celebran los actos patrios y eventos cívicos más importantes de la ciudad.
+                                {% elif "armas" in plaza.nombre|lower %}
+                                    Plaza principal de origen colonial, tradicionalmente rodeada por la catedral, municipio y edificios gubernamentales.
+                                {% elif plaza.ciudad|lower == "quito" %}
+                                    Una de las plazas más emblemáticas del centro histórico mejor conservado de América Latina.
+                                {% elif plaza.ciudad|lower == "cuenca" %}
+                                    Espacio central de la "Atenas del Ecuador", ciudad reconocida por su arquitectura colonial.
+                                {% elif plaza.ciudad|lower == "guayaquil" %}
+                                    Plaza representativa del puerto principal del Ecuador y centro económico del país.
+                                {% else %}
+                                    Plaza tradicional que constituye el núcleo social y cultural de {{ plaza.ciudad|default:"la localidad" }}.
+                                {% endif %}
+                            </p>
+
+                        </div>
+
+                        <!-- Footer con acciones mejoradas -->
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="row g-2">
+                                <div class="col">
+                                    <a href="{% url 'ecuador_data:plaza_detail' plaza.pk %}" 
+                                       class="btn btn-info btn-sm w-100">
+                                        <i class="fas fa-eye me-1"></i>Explorar
+                                    </a>
+                                </div>
+                                
+                                {% if plaza.latitud and plaza.longitud %}
+                                    <div class="col">
+                                        <a href="https://www.openstreetmap.org/?mlat={{ plaza.latitud }}&mlon={{ plaza.longitud }}&zoom=18" 
+                                           target="_blank" class="btn btn-outline-primary btn-sm w-100"
+                                           title="Ver ubicación en mapa">
+                                            <i class="fas fa-map-marker-alt me-1"></i>Ubicación
+                                        </a>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Botón adicional según la ciudad -->
+                                {% if plaza.ciudad|lower == "quito" or plaza.ciudad|lower == "cuenca" %}
+                                    <div class="col">
+                                        <button class="btn btn-outline-warning btn-sm w-100" 
+                                                title="Sitio Patrimonio UNESCO">
+                                            <i class="fas fa-globe me-1"></i>UNESCO
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="col">
+                                        <button class="btn btn-outline-secondary btn-sm w-100" 
+                                                onclick="navigator.share ? navigator.share({title: '{{ plaza.nombre }}', text: 'Plaza histórica en {{ plaza.ciudad }}', url: window.location.href}) : alert('Función no disponible')"
+                                                title="Compartir información">
+                                            <i class="fas fa-share-alt me-1"></i>Compartir
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Paginación de plazas">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center border-0 shadow-sm">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-3x text-info opacity-75"></i>
+                    </div>
+                    <h4 class="text-info">Sincronizando Plazas Históricas</h4>
+                    <p class="mb-3">Estamos obteniendo información actualizada de las plazas principales de Ecuador desde fuentes especializadas.</p>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                        <small class="text-muted">Conectando con bases de datos LOD...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+.plaza-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(23, 162, 184, 0.1) !important;
+}
+
+.plaza-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(23, 162, 184, 0.15) !important;
+    border-color: rgba(23, 162, 184, 0.3) !important;
+}
+
+.plaza-card .card-body {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.plaza-card .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+@media (max-width: 768px) {
+    .plaza-card .card-body .row .col-6 {
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
