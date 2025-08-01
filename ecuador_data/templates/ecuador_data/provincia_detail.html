@@ -41,13 +41,6 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if provincia.wikipedia_url %}
-                        <div class="mt-3">
-                            <a href="{{ provincia.wikipedia_url }}" target="_blank" class="btn btn-outline-primary">
-                                <i class="fab fa-wikipedia-w"></i> Ver en Wikipedia
-                            </a>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -66,13 +59,6 @@
                                 <img src="{{ provincia.bandera_url }}" alt="Bandera de {{ provincia.nombre }}" style="max-width: 100%; max-height: 130px; width: auto; height: auto; object-fit: contain;">
                             {% endif %}
                             <p class="small text-muted">Bandera de {{ provincia.nombre }}</p>
-                        </div>
-                    {% endif %}
-                    
-                    {% if provincia.escudo_url %}
-                        <div class="mb-3 text-center">
-                            <img src="{{ provincia.escudo_url }}" alt="Escudo de {{ provincia.nombre }}" class="img-fluid" style="max-height: 100px;">
-                            <p class="small text-muted">Escudo de {{ provincia.nombre }}</p>
                         </div>
                     {% endif %}
                     
@@ -252,6 +238,7 @@
         </div>
     </div>
 </div>
+
 <style>
 .canton-card:hover {
     transform: translateY(-2px);
@@ -267,61 +254,104 @@
 }
 </style>
 
+<!-- Leaflet JavaScript -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
         crossorigin=""></script>
 
+<!-- Pass data to JavaScript using JSON script tags -->
+{% if provincia.latitud and provincia.longitud %}
+<script id="provincia-data" type="application/json">
+{
+    "nombre": "{{ provincia.nombre|escapejs }}",
+    "capital": "{{ provincia.capital|escapejs }}",
+    "poblacion": {{ provincia.poblacion|default:"null" }},
+    "latitud": {{ provincia.latitud }},
+    "longitud": {{ provincia.longitud }}
+}
+</script>
+{% endif %}
+{% if provincia.cantones %}
+{{ provincia.cantones|json_script:"cantones-data" }}
+{% endif %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar mapa de la provincia
-    {% if provincia.latitud and provincia.longitud %}
-        var provinciaMap = L.map('provincia-map').setView([{{ provincia.latitud }}, {{ provincia.longitud }}], 9);
+    // Get data from JSON script tags
+    const provinciaData = JSON.parse(document.getElementById('provincia-data').textContent);
+    const cantonesData = JSON.parse(document.getElementById('cantones-data').textContent);
+    
+    // Initialize provincia map
+    if (provinciaData && provinciaData.latitud && provinciaData.longitud) {
+        const provinciaMap = L.map('provincia-map').setView([provinciaData.latitud, provinciaData.longitud], 9);
         
-        // Agregar capa de OpenStreetMap
+        // Add OpenStreetMap layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(provinciaMap);
         
-        // Marcador principal de la provincia
-        L.marker([{{ provincia.latitud }}, {{ provincia.longitud }}])
+        // Main provincia marker
+        let popupContent = '<strong>' + provinciaData.nombre + '</strong>';
+        if (provinciaData.capital) {
+            popupContent += '<br>Capital: ' + provinciaData.capital;
+        }
+        if (provinciaData.poblacion) {
+            popupContent += '<br>Población: ' + new Intl.NumberFormat().format(provinciaData.poblacion) + ' habitantes';
+        }
+        
+        L.marker([provinciaData.latitud, provinciaData.longitud])
             .addTo(provinciaMap)
-            .bindPopup('<strong>{{ provincia.nombre }}</strong>{% if provincia.capital %}<br>Capital: {{ provincia.capital }}{% endif %}{% if provincia.poblacion %}<br>Población: {{ provincia.poblacion|floatformat:0 }} habitantes{% endif %}')
+            .bindPopup(popupContent)
             .openPopup();
         
-        // Agregar marcadores de los cantones si existen
-        {% if provincia.cantones %}
-            {% for canton in provincia.cantones|dictsort:"nombre" %}
-                {% if canton.latitud and canton.longitud %}
-                    L.marker([{{ canton.latitud }}, {{ canton.longitud }}], {
+        // Add canton markers if they exist
+        if (cantonesData && Array.isArray(cantonesData)) {
+            cantonesData.forEach(function(canton) {
+                if (canton.latitud && canton.longitud) {
+                    let cantonPopup = '<strong>' + canton.nombre + '</strong>';
+                    if (canton.cabecera) {
+                        cantonPopup += '<br>Cabecera: ' + canton.cabecera;
+                    }
+                    
+                    L.marker([canton.latitud, canton.longitud], {
                         opacity: 0.7
                     })
                     .addTo(provinciaMap)
-                    .bindPopup('<strong>{{ canton.nombre }}</strong>{% if canton.cabecera %}<br>Cabecera: {{ canton.cabecera }}{% endif %}');
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    {% endif %}
+                    .bindPopup(cantonPopup);
+                }
+            });
+        }
+    }
     
-    // Inicializar mapas individuales de cantones
-    {% if provincia.cantones %}
-        {% for canton in provincia.cantones|dictsort:"nombre" %}
-            {% if canton.latitud and canton.longitud %}
-                // Inicializar mapa para {{ canton.nombre }}
-                var map{{ forloop.counter }} = L.map('map-{{ forloop.counter }}').setView([{{ canton.latitud }}, {{ canton.longitud }}], 12);
+    // Initialize individual canton maps
+    if (cantonesData && Array.isArray(cantonesData)) {
+        cantonesData.forEach(function(canton, index) {
+            if (canton.latitud && canton.longitud) {
+                const mapId = 'map-' + (index + 1);
+                const mapElement = document.getElementById(mapId);
                 
-                // Agregar capa de OpenStreetMap
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map{{ forloop.counter }});
-                
-                // Agregar marcador
-                L.marker([{{ canton.latitud }}, {{ canton.longitud }}])
-                    .addTo(map{{ forloop.counter }})
-                    .bindPopup('<strong>{{ canton.nombre }}</strong>{% if canton.cabecera %}<br>Cabecera: {{ canton.cabecera }}{% endif %}')
-                    .openPopup();
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+                if (mapElement) {
+                    const cantonMap = L.map(mapId).setView([canton.latitud, canton.longitud], 12);
+                    
+                    // Add OpenStreetMap layer
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(cantonMap);
+                    
+                    // Add marker
+                    let cantonPopup = '<strong>' + canton.nombre + '</strong>';
+                    if (canton.cabecera) {
+                        cantonPopup += '<br>Cabecera: ' + canton.cabecera;
+                    }
+                    
+                    L.marker([canton.latitud, canton.longitud])
+                        .addTo(cantonMap)
+                        .bindPopup(cantonPopup)
+                        .openPopup();
+                }
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
