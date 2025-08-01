@@ -1,14 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.generic import ListView, DetailView
-from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import redirect
-from django.utils import timezone
 from .models import Provincia, ParqueNacional, SitioPatrimonial, Plaza
-from .sparql_services import DataSyncService
 from .optimized_services import OptimizedDataSyncService
 import logging
 

@@ -31,35 +31,6 @@ class WikidataService(SPARQLService):
     def __init__(self):
         super().__init__("https://query.wikidata.org/sparql")
     
-    def get_provincias(self) -> Optional[List[Dict[str, Any]]]:
-        """Obtiene todas las provincias del Ecuador desde Wikidata"""
-        query = """
-        PREFIX wd: <http://www.wikidata.org/entity/>
-        PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-        PREFIX wikibase: <http://wikiba.se/ontology#>
-        PREFIX bd: <http://www.bigdata.com/rdf#>
-        PREFIX schema: <http://schema.org/>
-
-        SELECT ?item ?itemLabel ?wiki ?population ?area ?capitalLabel ?coord ?lat ?lon ?flag WHERE {
-          ?item wdt:P31 wd:Q719987 .  # Instancia de provincia de Ecuador
-          OPTIONAL { ?item wdt:P1082 ?population }
-          OPTIONAL { ?item wdt:P2046 ?area }
-          OPTIONAL { ?item wdt:P36 ?capital }
-          OPTIONAL { ?item wdt:P41 ?flag }
-          OPTIONAL {
-            ?wiki schema:about ?item ;
-                  schema:isPartOf <https://es.wikipedia.org/> .
-          }
-          SERVICE wikibase:label { bd:serviceParam wikibase:language "es" }
-          OPTIONAL { ?item wdt:P625 ?coord .
-            BIND(geof:latitude(?coord) AS ?lat)
-            BIND(geof:longitude(?coord) AS ?lon)
-          }
-        }
-        ORDER BY ?itemLabel
-        """
-        return self.query(query)
-    
     def get_provincias_detalladas(self) -> Optional[List[Dict[str, Any]]]:
         """Obtiene provincias con información detallada incluyendo imágenes"""
         query = """
@@ -227,25 +198,6 @@ class DBpediaService(SPARQLService):
         """
         return self.query(query)
     
-    def get_provincias_info(self) -> Optional[List[Dict[str, Any]]]:
-        """Obtiene información básica de provincias desde DBpedia"""
-        query = """
-        PREFIX dbo: <http://dbpedia.org/ontology/>
-        PREFIX dbr: <http://dbpedia.org/resource/>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-        SELECT DISTINCT ?provincia ?nombre ?capital WHERE {
-          ?provincia rdf:type dbo:AdministrativeRegion ;
-                     dbo:country dbr:Ecuador ;
-                     rdfs:label ?nombre .
-          OPTIONAL { ?provincia dbo:capital ?capital }
-          FILTER(langMatches(lang(?nombre), "en"))
-          FILTER(CONTAINS(LCASE(STR(?provincia)), "province"))
-        }
-        ORDER BY ?nombre
-        """
-        return self.query(query)
 
 class DataSyncService:
     """Servicio para sincronizar datos desde SPARQL a la base de datos Django"""
@@ -623,15 +575,6 @@ class DataSyncService:
         
         return result
     
-    def sync_all(self) -> Dict[str, Any]:
-        """Sincroniza todos los datos"""
-        result = {
-            "provincias": self.sync_provincias(),
-            "parques": self.sync_parques_nacionales(),
-            "sitios": self.sync_sitios_patrimoniales(),
-            "plazas": self.sync_plazas(),
-        }
-        return result
     
     def _parse_int(self, value: str) -> Optional[int]:
         """Convierte string a entero de forma segura"""
